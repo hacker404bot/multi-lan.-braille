@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multilang Braille Converter</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(-45deg, #ff9a9e, #fad0c4, #a1c4fd, #c2e9fb);
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
+      padding: 40px;
+      max-width: 600px;
+      margin: auto;
+      color: #222;
+    }
+
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    h2 {
+      text-align: center;
+      font-weight: bold;
+      font-size: 2em;
+      color: #1a1a1a;
+      margin-bottom: 30px;
+    }
+
+    label {
+      font-weight: bold;
+      font-size: 1.1em;
+      margin-top: 20px;
+      color: #333;
+    }
+
+    select, textarea, button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      border-radius: 10px;
+      font-size: 1em;
+      font-weight: bold;
+      border: none;
+      transition: all 0.3s ease;
+    }
+
+    select, textarea {
+      border: 2px solid #ccc;
+      background: #fff;
+    }
+
+    select:focus, textarea:focus {
+      outline: none;
+      border-color: #6a1b9a;
+      box-shadow: 0 0 5px #6a1b9a;
+    }
+
+    button {
+      background: linear-gradient(to right, #6a1b9a, #8e24aa);
+      color: white;
+      cursor: pointer;
+      border: none;
+      margin-top: 20px;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+
+    button:hover {
+      background: linear-gradient(to right, #8e24aa, #6a1b9a);
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    #outputBraille {
+      margin-top: 30px;
+      padding: 20px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      font-size: 2em;
+      font-weight: bold;
+      text-align: center;
+      color: #2e7d32;
+      white-space: pre-wrap;
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <h2>🌐 Multi-language Braille Converter with Audio 🔊</h2>
+
+  <label for="langSelect">Select Language:</label>
+  <select id="langSelect">
+    <option value="eng">English</option>
+    <option value="hin">Hindi</option>
+    <option value="tam">Tamil</option>
+    <option value="kan">Kannada</option>
+    <option value="ben">Bengali</option>
+    <option value="mar">Marathi</option>
+    <option value="tel">Telugu</option>
+    <option value="guj">Gujarati</option>
+    <option value="odi">Odia</option>
+    <option value="pun">Punjabi</option>
+    <option value="mal">Malayalam</option>
+    <option value="chh">Chhattisgarhi</option>
+    <option value="chi">Chinese</option>
+    <option value="fre">French</option>
+  </select>
+
+  <label for="inputText">Type text manually:</label>
+  <textarea id="inputText" rows="4" placeholder="Enter your text here..."></textarea>
+  <button onclick="processText()">Convert to Braille & Speak</button>
+
+  <div id="outputBraille"></div>
+
+  <script>
+    const langMap = {
+      eng: "en", hin: "hi", tam: "ta", kan: "kn", ben: "bn", mar: "mr",
+      tel: "te", guj: "gu", odi: "or", pun: "pa", mal: "ml", chh: "hi",
+      chi: "zh", fre: "fr"
+    };
+
+    const brailleMaps = {
+      eng: {
+        a: "⠁", b: "⠃", c: "⠉", d: "⠙", e: "⠑", f: "⠋", g: "⠛", h: "⠓",
+        i: "⠊", j: "⠚", k: "⠅", l: "⠇", m: "⠍", n: "⠝", o: "⠕", p: "⠏",
+        q: "⠟", r: "⠗", s: "⠎", t: "⠞", u: "⠥", v: "⠧", w: "⠺", x: "⠭",
+        y: "⠽", z: "⠵", ' ': ' '
+      },
+      hin: {
+        'अ': '⠁', 'आ': '⠡', 'इ': '⠊', 'ई': '⠈', 'उ': '⠳', 'ऊ': '⠳⠳',
+        'ए': '⠑', 'ऐ': '⠣', 'ओ': '⠕', 'औ': '⠪', 'क': '⠅', 'ख': '⠮', 'ग': '⠛',
+        'घ': '⠣⠛', 'च': '⠉', 'छ': '⠡⠉', 'ज': '⠚', 'झ': '⠡⠚', 'ट': '⠞',
+        'ठ': '⠣⠞', 'ड': '⠙', 'ढ': '⠡⠙', 'ण': '⠝', 'त': '⠞', 'थ': '⠹', 'द': '⠙',
+        'ध': '⠡⠙', 'न': '⠝', 'प': '⠏', 'फ': '⠋', 'ब': '⠃', 'भ': '⠡⠃',
+        'म': '⠍', 'य': '⠽', 'र': '⠗', 'ल': '⠇', 'व': '⠧', 'श': '⠱',
+        'ष': '⠭', 'स': '⠎', 'ह': '⠓',
+        'ा': '⠁', 'ि': '⠊', 'ी': '⠈', 'ु': '⠳', 'ू': '⠳⠳',
+        'े': '⠑', 'ै': '⠣', 'ो': '⠕', 'ौ': '⠪', 'ं': '⠂', 'ः': '⠆',
+        'ँ': '⠴', '्': '⠄', ' ': ' '
+      },
+      mar: { 
+        
+          "अ": "⠁", "आ": "⠡", "इ": "⠊", "ई": "⠈", "उ": "⠳", "ऊ": "⠳⠳",
+          "ऋ": "⠗", "ॠ": "⠗⠗", "ए": "⠑", "ऐ": "⠜", "ओ": "⠕", "औ": "⠕⠕", "ऑ": "⠕⠄",
+      
+          "ा": "⠡", "ि": "⠊", "ी": "⠈", "ु": "⠳", "ू": "⠳⠳", "ृ": "⠗",
+          "ॄ": "⠗⠗", "े": "⠑", "ै": "⠜", "ो": "⠕", "ौ": "⠕⠕", "ॉ": "⠕⠄",
+      
+          "क": "⠅", "ख": "⠮", "ग": "⠛", "घ": "⠣", "ङ": "⠻",
+          "च": "⠉", "छ": "⠡⠡", "ज": "⠚", "झ": "⠵", "ञ": "⠝⠝",
+          "ट": "⠞", "ठ": "⠾", "ड": "⠙", "ढ": "⠹", "ण": "⠻",
+          "त": "⠞", "थ": "⠹", "द": "⠙", "ध": "⠸", "न": "⠝",
+          "प": "⠏", "फ": "⠋", "ब": "⠃", "भ": "⠃⠃", "म": "⠍",
+          "य": "⠽", "र": "⠗", "ल": "⠇", "ळ": "⠇⠇", "व": "⠧",
+          "श": "⠱", "ष": "⠭", "स": "⠎", "ह": "⠓",
+      
+          "क्ष": "⠭⠱", "त्र": "⠞⠗", "ज्ञ": "⠛⠝",
+      
+          "ं": "⠂", "ः": "⠄", "ँ": "⠐", "ऽ": "⠘", "़": "⠈",
+          "।": "⠲", "॥": "⠶",
+      
+          "०": "⠚", "१": "⠁", "२": "⠃", "३": "⠉", "४": "⠙",
+          "५": "⠑", "६": "⠋", "७": "⠛", "८": "⠓", "९": "⠊"
+        },
+      pun: { 'ਅ': '⠁', 'ਆ': '⠡', 'ਇ': '⠊', 'ਈ': '⠈', 'ਉ': '⠳', 'ਊ': '⠳⠳',
+        'ਏ': '⠑', 'ਐ': '⠜', 'ਓ': '⠕', 'ਔ': '⠕⠕',
+        'ਕ': '⠅', 'ਖ': '⠮', 'ਗ': '⠛', 'ਘ': '⠣', 'ਚ': '⠉', 'ਛ': '⠡⠡',
+        'ਜ': '⠚', 'ਝ': '⠵', 'ਟ': '⠞', 'ਠ': '⠾', 'ਡ': '⠙', 'ਢ': '⠹',
+        'ਣ': '⠻', 'ਤ': '⠞', 'ਥ': '⠹', 'ਦ': '⠙', 'ਧ': '⠸', 'ਨ': '⠝',
+        'ਪ': '⠏', 'ਫ': '⠋', 'ਬ': '⠃', 'ਭ': '⠃⠃', 'ਮ': '⠍',
+        'ਯ': '⠽', 'ਰ': '⠗', 'ਲ': '⠇', 'ਵ': '⠧', 'ਸ਼': '⠱', 'ਸ': '⠎', 'ਹ': '⠓' },
+      guj: { 'અ': '⠁', 'આ': '⠡', 'ઇ': '⠊', 'ઈ': '⠈', 'ઉ': '⠳', 'ઊ': '⠳⠳',
+        'એ': '⠑', 'ઐ': '⠜', 'ઓ': '⠕', 'ઔ': '⠕⠕',
+        'ક': '⠅', 'ખ': '⠮', 'ગ': '⠛', 'ઘ': '⠣', 'ચ': '⠉', 'છ': '⠡⠡',
+        'જ': '⠚', 'ઝ': '⠵', 'ટ': '⠞', 'ઠ': '⠾', 'ડ': '⠙', 'ઢ': '⠹',
+        'ણ': '⠻', 'ત': '⠞', 'થ': '⠹', 'દ': '⠙', 'ધ': '⠸', 'ન': '⠝',
+        'પ': '⠏', 'ફ': '⠋', 'બ': '⠃', 'ભ': '⠃⠃', 'મ': '⠍',
+        'ય': '⠽', 'ર': '⠗', 'લ': '⠇', 'વ': '⠧', 'શ': '⠱', 'ષ': '⠭', 'સ': '⠎', 'હ': '⠓' ,"ा": "⠡", "ि": "⠊", "ी": "⠈", "ु": "⠳", "ू": "⠳⠳", "ृ": "⠗",
+          "ॄ": "⠗⠗", "े": "⠑", "ै": "⠜", "ो": "⠕", "ौ": "⠕⠕", "ॉ": "⠕⠄"},
+      kan: { 'ಅ': '⠁', 'ಆ': '⠡', 'ಇ': '⠊', 'ಈ': '⠈', 'ಉ': '⠳', 'ಊ': '⠳⠳',
+        'ಎ': '⠑', 'ಐ': '⠜', 'ಒ': '⠕', 'ಔ': '⠕⠕',
+        'ಕ': '⠅', 'ಖ': '⠮', 'ಗ': '⠛', 'ಘ': '⠣', 'ಚ': '⠉', 'ಛ': '⠡⠡',
+        'ಜ': '⠚', 'ಝ': '⠵', 'ಟ': '⠞', 'ಠ': '⠾', 'ಡ': '⠙', 'ಢ': '⠹',
+        'ಣ': '⠻', 'ತ': '⠞', 'ಥ': '⠹', 'ದ': '⠙', 'ಧ': '⠸', 'ನ': '⠝',
+        'ಪ': '⠏', 'ಫ': '⠋', 'ಬ': '⠃', 'ಭ': '⠃⠃', 'ಮ': '⠍',
+        'ಯ': '⠽', 'ರ': '⠗', 'ಲ': '⠇', 'ವ': '⠧', 'ಶ': '⠱', 'ಷ': '⠭', 'ಸ': '⠎', 'ಹ': '⠓'
+      },
+      chh: { 'अ': '⠁', 'आ': '⠡', 'इ': '⠊', 'ई': '⠈',
+        'क': '⠅', 'ख': '⠮', 'ग': '⠛', 'घ': '⠣', 'च': '⠉', 'छ': '⠡⠡',
+        'ज': '⠚', 'झ': '⠵', 'ट': '⠞', 'ठ': '⠾', 'ड': '⠙', 'ढ': '⠹',
+        'ण': '⠻', 'त': '⠞', 'थ': '⠹', 'द': '⠙', 'ध': '⠸', 'न': '⠝',
+        'प': '⠏', 'फ': '⠋', 'ब': '⠃', 'भ': '⠃⠃', 'म': '⠍',
+        'य': '⠽', 'र': '⠗', 'ल': '⠇', 'व': '⠧', 'श': '⠱', 'ष': '⠭', 'स': '⠎', 'ह': '⠓'
+      },
+      ben: {
+        'অ': '⠁', 'আ': '⠡', 'ই': '⠊', 'ঈ': '⠈', 'উ': '⠳', 'ঊ': '⠳⠳',
+        'এ': '⠑', 'ঐ': '⠜', 'ও': '⠕', 'ঔ': '⠕⠕',
+        'ক': '⠅', 'খ': '⠮', 'গ': '⠛', 'ঘ': '⠣', 'চ': '⠉', 'ছ': '⠡⠡',
+        'জ': '⠚', 'ঝ': '⠵', 'ট': '⠞', 'ঠ': '⠾', 'ড': '⠙', 'ঢ': '⠹',
+        'ণ': '⠻', 'ত': '⠞', 'থ': '⠹', 'দ': '⠙', 'ধ': '⠸', 'ন': '⠝',
+        'প': '⠏', 'ফ': '⠋', 'ব': '⠃', 'ভ': '⠃⠃', 'ম': '⠍',
+        'য': '⠽', 'র': '⠗', 'ল': '⠇', 'শ': '⠱', 'ষ': '⠭', 'স': '⠎', 'হ': '⠓'
+      
+      },
+      chi: { 
+        '你': '⠝', '好': '⠓', '是': '⠎', '我': '⠺', '的': '⠙',
+        '他': '⠞', '她': '⠮', '们': '⠍', '在': '⠵', '这': '⠌'
+      
+      },
+      fre: { 
+        'a': '⠁', 'b': '⠃', 'c': '⠉', 'd': '⠙', 'e': '⠑',
+        'f': '⠋', 'g': '⠛', 'h': '⠓', 'i': '⠊', 'j': '⠚',
+        'k': '⠅', 'l': '⠇', 'm': '⠍', 'n': '⠝', 'o': '⠕',
+        'p': '⠏', 'q': '⠟', 'r': '⠗', 's': '⠎', 't': '⠞',
+        'u': '⠥', 'v': '⠧', 'w': '⠺', 'x': '⠭', 'y': '⠽', 'z': '⠵',
+        'é': '⠿', 'è': '⠮', 'ê': '⠯', 'à': '⠷', 'ù': '⠾', 'ç': '⠯'
+      
+      }
+    };
+
+    function textToBraille(text, lang) {
+      const map = brailleMaps[lang];
+      if (!map) return text;
+      return text.split('').map(char => map[char] || char).join('');
+    }
+
+    function speakText(text, lang) {
+      const msg = new SpeechSynthesisUtterance(text);
+      msg.lang = langMap[lang] || 'en-US';
+      window.speechSynthesis.speak(msg);
+    }
+    
+      function processText() {
+        const lang = document.getElementById('langSelect').value;
+        const input = document.getElementById('inputText').value;
+        const brailleMap = brailleMaps[lang];
+        let output = '';
+    
+        for (let char of input) {
+          output += brailleMap[char] || '?'; // Show '?' for unsupported characters
+        }
+    
+        document.getElementById('outputBraille').innerText = output;
+        speakBraille(input, langMap[lang]); // Call speech after conversion
+      }
+    
+      function speakBraille(text, langCode) {
+        const synth = window.speechSynthesis;
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = langCode;
+        synth.speak(utterance);
+      }
+    
+    
+    function processText() {
+      const lang = document.getElementById('langSelect').value;
+      const text = document.getElementById('inputText').value;
+      const braille = textToBraille(text, lang);
+      document.getElementById('outputBraille').innerText = braille;
+      speakText(text, lang);
+    }
+  </script>
+</body>
+</html>
